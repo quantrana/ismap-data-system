@@ -2,41 +2,56 @@
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import pandas as pd
 import psycopg2
 import streamlit as st
-from dotenv import load_dotenv
 from streamlit.errors import StreamlitSecretNotFoundError
 
-
-load_dotenv()
+_SECRETS_HELP = (
+    "Add `dashboard/.streamlit/secrets.toml` with a `[database]` section "
+    "(copy from `dashboard/.streamlit/secrets.toml.example`)."
+)
 
 
 def _db_config() -> dict[str, Any]:
-    """Return Postgres connection settings from Streamlit secrets or env vars."""
+    """Return Postgres connection settings from Streamlit secrets only."""
     try:
-        if "database" in st.secrets:
-            db = st.secrets["database"]
-            return {
-                "host": db.get("host"),
-                "port": int(db.get("port", 5432)),
-                "dbname": db.get("name"),
-                "user": db.get("user"),
-                "password": db.get("password"),
-            }
-    except StreamlitSecretNotFoundError:
-        # No secrets file is configured; fall back to environment variables.
-        pass
+        db = st.secrets["database"]
+    except StreamlitSecretNotFoundError as exc:
+        raise RuntimeError(
+            f"No Streamlit secrets file found. {_SECRETS_HELP}"
+        ) from exc
+    except (KeyError, TypeError) as exc:
+        raise RuntimeError(
+            f"Missing or invalid `[database]` in secrets.toml. {_SECRETS_HELP}"
+        ) from exc
+
+    def _s(key: str) -> str | None:
+        v = db.get(key)
+        if v is None:
+            return None
+        return str(v).strip() or None
+
+    host = _s("host")
+    name = _s("name")
+    user = _s("user")
+    password = _s("password")
+    port_raw = db.get("port", 5432)
+    try:
+        port = int(port_raw)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(
+            "secrets.toml [database].port must be an integer."
+        ) from exc
 
     return {
-        "host": os.getenv("RDS_HOST"),
-        "port": int(os.getenv("RDS_PORT", "5432")),
-        "dbname": os.getenv("RDS_DATABASE"),
-        "user": os.getenv("RDS_USER"),
-        "password": os.getenv("RDS_PASSWORD"),
+        "host": host,
+        "port": port,
+        "dbname": name,
+        "user": user,
+        "password": password,
     }
 
 
@@ -44,9 +59,11 @@ def _db_config() -> dict[str, Any]:
 def run_query(query: str) -> pd.DataFrame:
     """Run SQL and return a pandas DataFrame."""
     cfg = _db_config()
-    if not all(cfg.values()):
+    missing = [k for k, v in cfg.items() if v in (None, "")]
+    if missing:
         raise RuntimeError(
-            "Missing DB config. Set RDS_* env vars or [database] in .streamlit/secrets.toml."
+            f"Incomplete [database] in secrets.toml (missing: {', '.join(missing)}). "
+            f"{_SECRETS_HELP}"
         )
 
     with psycopg2.connect(**cfg) as conn:
@@ -87,4 +104,3 @@ def get_sales_base() -> pd.DataFrame:
     if not df.empty:
         df["full_date"] = pd.to_datetime(df["full_date"])
     return df
-
