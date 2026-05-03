@@ -6,7 +6,6 @@ all malls and time periods.
 
 from __future__ import annotations
 
-import pandas as pd
 import plotly.express as px
 import streamlit as st
 
@@ -27,27 +26,6 @@ def render() -> None:
 
     if df.empty:
         st.warning("No data found in `fact_sales`.")
-        return
-
-    min_date = df["full_date"].min().date()
-    max_date = df["full_date"].max().date()
-    date_range = st.date_input(
-        "Date Range",
-        value=(min_date, max_date),
-        min_value=min_date,
-        max_value=max_date,
-    )
-    malls = sorted(df["shopping_mall"].unique().tolist())
-    selected_malls = st.multiselect("Malls", malls, default=malls)
-
-    if len(date_range) == 2:
-        start_date, end_date = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
-        df = df[(df["full_date"] >= start_date) & (df["full_date"] <= end_date)]
-    if selected_malls:
-        df = df[df["shopping_mall"].isin(selected_malls)]
-
-    if df.empty:
-        st.info("No records match the selected filters.")
         return
 
     total_revenue = float(df["total_amount"].sum())
@@ -85,7 +63,7 @@ def render() -> None:
                 title="Monthly Revenue",
                 labels={"month": "Month", "revenue": "Revenue (TRY)"},
             ),
-            use_container_width=True,
+            width="stretch",
         )
     with col2:
         st.plotly_chart(
@@ -96,7 +74,7 @@ def render() -> None:
                 title="Revenue by Mall",
                 labels={"shopping_mall": "Mall", "revenue": "Revenue (TRY)"},
             ),
-            use_container_width=True,
+            width="stretch",
         )
 
 

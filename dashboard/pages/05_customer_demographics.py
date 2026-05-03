@@ -25,53 +25,49 @@ def render() -> None:
         st.warning("No data found in `fact_sales`.")
         return
 
-    by_gender = (
-        df.groupby("gender", as_index=False)
-        .agg(revenue=("total_amount", "sum"), customers=("customer_id", "nunique"))
-        .sort_values("revenue", ascending=False)
+    by_age_group = df.groupby("age_group", as_index=False).agg(
+        customers=("customer_id", "nunique")
     )
-    by_age_group = (
-        df.groupby("age_group", as_index=False)
-        .agg(revenue=("total_amount", "sum"), customers=("customer_id", "nunique"))
-        .sort_values("age_group")
-    )
-    top_customers = (
-        df.groupby(["customer_id", "gender", "age_group"], as_index=False)
-        .agg(
-            spend=("total_amount", "sum"),
-            transactions=("invoice_no", "nunique"),
-        )
-        .sort_values("spend", ascending=False)
-        .head(20)
+    by_gender = df.groupby("gender", as_index=False).agg(customers=("customer_id", "nunique"))
+    spend_heatmap = (
+        df.groupby(["age_group", "gender"], as_index=False)["total_amount"]
+        .sum()
+        .rename(columns={"total_amount": "spend"})
     )
 
     col1, col2 = st.columns(2)
     with col1:
         st.plotly_chart(
-            px.pie(
-                by_gender,
-                names="gender",
-                values="revenue",
-                title="Revenue Share by Gender",
+            px.bar(
+                by_age_group.sort_values("age_group"),
+                x="age_group",
+                y="customers",
+                title="Age Group Distribution",
+                labels={"age_group": "Age Group", "customers": "Unique Customers"},
             ),
-            use_container_width=True,
+            width="stretch",
         )
     with col2:
         st.plotly_chart(
-            px.bar(
-                by_age_group,
-                x="age_group",
-                y="customers",
-                title="Unique Customers by Age Group",
-                labels={"age_group": "Age Group", "customers": "Customers"},
+            px.pie(
+                by_gender,
+                names="gender",
+                values="customers",
+                title="Gender Split",
             ),
-            use_container_width=True,
+            width="stretch",
         )
 
-    st.subheader("Top 20 Customers by Spend")
-    st.dataframe(
-        top_customers.style.format({"spend": "{:,.2f}", "transactions": "{:,}"}),
-        use_container_width=True,
+    st.plotly_chart(
+        px.density_heatmap(
+            spend_heatmap,
+            x="age_group",
+            y="gender",
+            z="spend",
+            title="Spending Heatmap: Age Group x Gender",
+            labels={"age_group": "Age Group", "gender": "Gender", "spend": "Spend (TRY)"},
+        ),
+        width="stretch",
     )
 
 

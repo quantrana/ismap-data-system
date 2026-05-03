@@ -55,7 +55,7 @@ def _db_config() -> dict[str, Any]:
     }
 
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=600, show_spinner=False)
 def run_query(query: str) -> pd.DataFrame:
     """Run SQL and return a pandas DataFrame."""
     cfg = _db_config()
@@ -70,7 +70,7 @@ def run_query(query: str) -> pd.DataFrame:
         return pd.read_sql_query(query, conn)
 
 
-@st.cache_data(ttl=300, show_spinner=True)
+@st.cache_data(ttl=600, show_spinner=True)
 def get_sales_base() -> pd.DataFrame:
     """Return transaction-level data joined with key dimensions."""
     query = """
@@ -104,3 +104,5 @@ def get_sales_base() -> pd.DataFrame:
     if not df.empty:
         df["full_date"] = pd.to_datetime(df["full_date"])
     return df
+
+

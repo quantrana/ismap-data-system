@@ -25,73 +25,105 @@ def render() -> None:
         st.warning("No data found in `fact_sales`.")
         return
 
-    daily = (
-        df.groupby("full_date", as_index=False)["total_amount"]
+    monthly = (
+        df.assign(month=df["full_date"].dt.to_period("M").astype(str))
+        .groupby("month", as_index=False)["total_amount"]
         .sum()
         .rename(columns={"total_amount": "revenue"})
     )
-    weekday_order = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
+    quarterly = (
+        df.assign(quarter=df["full_date"].dt.to_period("Q").astype(str))
+        .groupby("quarter", as_index=False)["total_amount"]
+        .sum()
+        .rename(columns={"total_amount": "revenue"})
+    )
+    holiday_split = (
+        df.assign(holiday_flag=df["is_holiday"].map({True: "Holiday", False: "Non-Holiday"}))
+        .groupby("holiday_flag", as_index=False)["total_amount"]
+        .sum()
+        .rename(columns={"total_amount": "revenue"})
+    )
+    weekend_split = (
+        df.assign(weekend_flag=df["is_weekend"].map({True: "Weekend", False: "Weekday"}))
+        .groupby("weekend_flag", as_index=False)["total_amount"]
+        .sum()
+        .rename(columns={"total_amount": "revenue"})
+    )
+    seasonal = (
+        df.groupby("month_name", as_index=False)["total_amount"]
+        .sum()
+        .rename(columns={"total_amount": "revenue"})
+    )
+    month_order = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
     ]
-    weekday = (
-        df.groupby("day_name", as_index=False)["total_amount"]
-        .sum()
-        .rename(columns={"total_amount": "revenue"})
+    seasonal["month_name"] = seasonal["month_name"].astype("category").cat.set_categories(
+        month_order, ordered=True
     )
-    weekday["day_name"] = weekday["day_name"].astype("category").cat.set_categories(
-        weekday_order, ordered=True
-    )
-    weekday = weekday.sort_values("day_name")
-
-    holiday_weekend = (
-        df.groupby(["is_weekend", "is_holiday"], as_index=False)["total_amount"]
-        .sum()
-        .rename(columns={"total_amount": "revenue"})
-    )
-    holiday_weekend["type"] = holiday_weekend.apply(
-        lambda x: f"weekend={x['is_weekend']}, holiday={x['is_holiday']}", axis=1
-    )
+    seasonal = seasonal.sort_values("month_name")
 
     col1, col2 = st.columns(2)
     with col1:
         st.plotly_chart(
             px.line(
-                daily,
-                x="full_date",
+                monthly,
+                x="month",
                 y="revenue",
-                title="Daily Revenue Trend",
-                labels={"full_date": "Date", "revenue": "Revenue (TRY)"},
+                title="Monthly Revenue Trend",
+                labels={"month": "Month", "revenue": "Revenue (TRY)"},
+                markers=True,
             ),
-            use_container_width=True,
+            width="stretch",
         )
     with col2:
         st.plotly_chart(
-            px.bar(
-                weekday,
-                x="day_name",
+            px.line(
+                quarterly,
+                x="quarter",
                 y="revenue",
-                title="Revenue by Day of Week",
-                labels={"day_name": "Day", "revenue": "Revenue (TRY)"},
+                title="Quarterly Revenue Trend",
+                labels={"quarter": "Quarter", "revenue": "Revenue (TRY)"},
+                markers=True,
             ),
-            use_container_width=True,
+            width="stretch",
+        )
+
+    col3, col4 = st.columns(2)
+    with col3:
+        st.plotly_chart(
+            px.bar(
+                holiday_split,
+                x="holiday_flag",
+                y="revenue",
+                color="holiday_flag",
+                title="Holiday vs Non-Holiday Revenue",
+                labels={"holiday_flag": "Day Type", "revenue": "Revenue (TRY)"},
+            ),
+            width="stretch",
+        )
+    with col4:
+        st.plotly_chart(
+            px.bar(
+                weekend_split,
+                x="weekend_flag",
+                y="revenue",
+                color="weekend_flag",
+                title="Weekend vs Weekday Revenue",
+                labels={"weekend_flag": "Day Type", "revenue": "Revenue (TRY)"},
+            ),
+            width="stretch",
         )
 
     st.plotly_chart(
         px.bar(
-            holiday_weekend,
-            x="type",
+            seasonal,
+            x="month_name",
             y="revenue",
-            color="type",
-            title="Revenue by Holiday/Weekend Flag",
-            labels={"type": "Flag Combination", "revenue": "Revenue (TRY)"},
+            title="Seasonal Breakdown (by Month)",
+            labels={"month_name": "Month", "revenue": "Revenue (TRY)"},
         ),
-        use_container_width=True,
+        width="stretch",
     )
 
 

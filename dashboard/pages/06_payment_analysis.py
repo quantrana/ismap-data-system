@@ -30,8 +30,6 @@ def render() -> None:
         df.groupby("payment_method", as_index=False)
         .agg(
             revenue=("total_amount", "sum"),
-            transactions=("invoice_no", "nunique"),
-            avg_transaction_value=("total_amount", "mean"),
         )
         .sort_values("revenue", ascending=False)
     )
@@ -50,46 +48,21 @@ def render() -> None:
                 values="revenue",
                 title="Revenue Share by Payment Method",
             ),
-            use_container_width=True,
+            width="stretch",
         )
     with col2:
         st.plotly_chart(
             px.bar(
-                by_payment,
-                x="payment_method",
-                y="avg_transaction_value",
-                title="Average Transaction Value by Payment Method",
-                labels={
-                    "payment_method": "Payment Method",
-                    "avg_transaction_value": "Avg Transaction Value (TRY)",
-                },
+                by_payment_mall,
+                x="shopping_mall",
+                y="revenue",
+                color="payment_method",
+                barmode="stack",
+                title="Payment Method by Mall",
+                labels={"shopping_mall": "Mall", "revenue": "Revenue (TRY)"},
             ),
-            use_container_width=True,
+            width="stretch",
         )
-
-    st.plotly_chart(
-        px.bar(
-            by_payment_mall,
-            x="shopping_mall",
-            y="revenue",
-            color="payment_method",
-            barmode="stack",
-            title="Payment Method Revenue Mix by Mall",
-            labels={"shopping_mall": "Mall", "revenue": "Revenue (TRY)"},
-        ),
-        use_container_width=True,
-    )
-
-    st.dataframe(
-        by_payment.style.format(
-            {
-                "revenue": "{:,.2f}",
-                "transactions": "{:,}",
-                "avg_transaction_value": "{:,.2f}",
-            }
-        ),
-        use_container_width=True,
-    )
 
 
 if __name__ == "__main__":

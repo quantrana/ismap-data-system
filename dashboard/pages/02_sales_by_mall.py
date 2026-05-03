@@ -25,6 +25,10 @@ def render() -> None:
         st.warning("No data found in `fact_sales`.")
         return
 
+    malls = sorted(df["shopping_mall"].dropna().unique().tolist())
+    selected_mall = st.selectbox("Select Mall", malls)
+    mall_df = df[df["shopping_mall"] == selected_mall]
+
     by_mall = (
         df.groupby("shopping_mall", as_index=False)
         .agg(
@@ -45,48 +49,32 @@ def render() -> None:
             title="Total Revenue by Mall",
             labels={"shopping_mall": "Mall", "revenue": "Revenue (TRY)"},
         ),
-        use_container_width=True,
+        width="stretch",
     )
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(
-            px.bar(
-                by_mall,
-                x="shopping_mall",
-                y="transactions",
-                title="Transactions by Mall",
-                labels={"shopping_mall": "Mall", "transactions": "Transactions"},
-            ),
-            use_container_width=True,
+    detail = (
+        mall_df.groupby("shopping_mall", as_index=False)
+        .agg(
+            revenue=("total_amount", "sum"),
+            transactions=("invoice_no", "nunique"),
+            unique_customers=("customer_id", "nunique"),
+            total_quantity=("quantity", "sum"),
+            avg_transaction_value=("total_amount", "mean"),
         )
-    with col2:
-        st.plotly_chart(
-            px.scatter(
-                by_mall,
-                x="transactions",
-                y="avg_basket",
-                size="revenue",
-                hover_name="shopping_mall",
-                title="Basket Value vs Transaction Volume",
-                labels={
-                    "transactions": "Transactions",
-                    "avg_basket": "Avg Basket (TRY)",
-                },
-            ),
-            use_container_width=True,
-        )
-
+        .sort_values("revenue", ascending=False)
+    )
+    st.subheader(f"Detailed Metrics - {selected_mall}")
     st.dataframe(
-        by_mall.style.format(
+        detail.style.format(
             {
                 "revenue": "{:,.2f}",
                 "transactions": "{:,}",
-                "customers": "{:,}",
-                "avg_basket": "{:,.2f}",
+                "unique_customers": "{:,}",
+                "total_quantity": "{:,}",
+                "avg_transaction_value": "{:,.2f}",
             }
         ),
-        use_container_width=True,
+        width="stretch",
     )
 
 
