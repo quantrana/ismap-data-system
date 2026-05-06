@@ -7,6 +7,7 @@ interactive retail analytics dashboard.
 from __future__ import annotations
 
 import streamlit as st
+from data import render_custom_sidebar
 
 def main() -> None:
     """Render the dashboard entry page with sidebar navigation links."""
@@ -15,6 +16,7 @@ def main() -> None:
         page_icon="🛍️",
         layout="wide",
     )
+    render_custom_sidebar("home")
 
     st.title("ISMAP - Istanbul Shopping Mall Analytics Platform")
     st.markdown(

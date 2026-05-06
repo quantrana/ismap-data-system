@@ -5,11 +5,12 @@ from __future__ import annotations
 import plotly.express as px
 import streamlit as st
 
-from data import get_sales_base
+from data import get_sales_base, render_custom_sidebar
 
 
 def render() -> None:
     """Render the sales by mall dashboard page."""
+    render_custom_sidebar("mall")
     st.title("Sales by Mall")
     st.markdown(
         "Analyse revenue and transaction volumes broken down by shopping mall."
@@ -40,17 +41,18 @@ def render() -> None:
         .sort_values("revenue", ascending=False)
     )
 
-    st.plotly_chart(
-        px.bar(
-            by_mall,
-            x="shopping_mall",
-            y="revenue",
-            text_auto=".2s",
-            title="Total Revenue by Mall",
-            labels={"shopping_mall": "Mall", "revenue": "Revenue (TRY)"},
-        ),
-        width="stretch",
-    )
+    with st.container(border=True):
+        st.plotly_chart(
+            px.bar(
+                by_mall,
+                x="shopping_mall",
+                y="revenue",
+                text_auto=".2s",
+                title="Total Revenue by Mall",
+                labels={"shopping_mall": "Mall", "revenue": "Revenue (TRY)"},
+            ),
+            width="stretch",
+        )
 
     detail = (
         mall_df.groupby("shopping_mall", as_index=False)
@@ -63,19 +65,20 @@ def render() -> None:
         )
         .sort_values("revenue", ascending=False)
     )
-    st.subheader(f"Detailed Metrics - {selected_mall}")
-    st.dataframe(
-        detail.style.format(
-            {
-                "revenue": "{:,.2f}",
-                "transactions": "{:,}",
-                "unique_customers": "{:,}",
-                "total_quantity": "{:,}",
-                "avg_transaction_value": "{:,.2f}",
-            }
-        ),
-        width="stretch",
-    )
+    with st.container(border=True):
+        st.subheader(f"Detailed Metrics - {selected_mall}")
+        st.dataframe(
+            detail.style.format(
+                {
+                    "revenue": "{:,.2f}",
+                    "transactions": "{:,}",
+                    "unique_customers": "{:,}",
+                    "total_quantity": "{:,}",
+                    "avg_transaction_value": "{:,.2f}",
+                }
+            ),
+            width="stretch",
+        )
 
 
 if __name__ == "__main__":

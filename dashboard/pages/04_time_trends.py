@@ -5,11 +5,12 @@ from __future__ import annotations
 import plotly.express as px
 import streamlit as st
 
-from data import get_sales_base
+from data import get_sales_base, render_custom_sidebar
 
 
 def render() -> None:
     """Render the time trends dashboard page."""
+    render_custom_sidebar("trends")
     st.title("Time Trends")
     st.markdown(
         "Visualise temporal patterns such as daily, weekly, and seasonal trends."
@@ -65,66 +66,71 @@ def render() -> None:
 
     col1, col2 = st.columns(2)
     with col1:
-        st.plotly_chart(
-            px.line(
-                monthly,
-                x="month",
-                y="revenue",
-                title="Monthly Revenue Trend",
-                labels={"month": "Month", "revenue": "Revenue (TRY)"},
-                markers=True,
-            ),
-            width="stretch",
-        )
+        with st.container(border=True):
+            st.plotly_chart(
+                px.line(
+                    monthly,
+                    x="month",
+                    y="revenue",
+                    title="Monthly Revenue Trend",
+                    labels={"month": "Month", "revenue": "Revenue (TRY)"},
+                    markers=True,
+                ),
+                width="stretch",
+            )
     with col2:
-        st.plotly_chart(
-            px.line(
-                quarterly,
-                x="quarter",
-                y="revenue",
-                title="Quarterly Revenue Trend",
-                labels={"quarter": "Quarter", "revenue": "Revenue (TRY)"},
-                markers=True,
-            ),
-            width="stretch",
-        )
+        with st.container(border=True):
+            st.plotly_chart(
+                px.line(
+                    quarterly,
+                    x="quarter",
+                    y="revenue",
+                    title="Quarterly Revenue Trend",
+                    labels={"quarter": "Quarter", "revenue": "Revenue (TRY)"},
+                    markers=True,
+                ),
+                width="stretch",
+            )
 
     col3, col4 = st.columns(2)
     with col3:
-        st.plotly_chart(
-            px.bar(
-                holiday_split,
-                x="holiday_flag",
-                y="revenue",
-                color="holiday_flag",
-                title="Holiday vs Non-Holiday Revenue",
-                labels={"holiday_flag": "Day Type", "revenue": "Revenue (TRY)"},
-            ),
-            width="stretch",
-        )
+        with st.container(border=True):
+            st.plotly_chart(
+                px.bar(
+                    holiday_split,
+                    x="holiday_flag",
+                    y="revenue",
+                    color="holiday_flag",
+                    title="Holiday vs Non-Holiday Revenue",
+                    labels={"holiday_flag": "Day Type", "revenue": "Revenue (TRY)"},
+                ),
+                width="stretch",
+            )
     with col4:
+        with st.container(border=True):
+            st.plotly_chart(
+                px.bar(
+                    weekend_split,
+                    x="weekend_flag",
+                    y="revenue",
+                    color="weekend_flag",
+                    title="Weekend vs Weekday Revenue",
+                    labels={"weekend_flag": "Day Type", "revenue": "Revenue (TRY)"},
+                ),
+                width="stretch",
+            )
+
+    with st.container(border=True):
         st.plotly_chart(
             px.bar(
-                weekend_split,
-                x="weekend_flag",
+                seasonal,
+                x="month_name",
                 y="revenue",
-                color="weekend_flag",
-                title="Weekend vs Weekday Revenue",
-                labels={"weekend_flag": "Day Type", "revenue": "Revenue (TRY)"},
+                title="Seasonal Breakdown (by Month)",
+                labels={"month_name": "Month", "revenue": "Revenue (TRY)"},
             ),
             width="stretch",
         )
-
-    st.plotly_chart(
-        px.bar(
-            seasonal,
-            x="month_name",
-            y="revenue",
-            title="Seasonal Breakdown (by Month)",
-            labels={"month_name": "Month", "revenue": "Revenue (TRY)"},
-        ),
-        width="stretch",
-    )
 
 
 if __name__ == "__main__":

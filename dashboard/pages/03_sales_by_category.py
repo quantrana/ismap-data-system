@@ -5,11 +5,12 @@ from __future__ import annotations
 import plotly.express as px
 import streamlit as st
 
-from data import get_sales_base
+from data import get_sales_base, render_custom_sidebar
 
 
 def render() -> None:
     """Render the sales by category dashboard page."""
+    render_custom_sidebar("category")
     st.title("Sales by Category")
     st.markdown(
         "Explore performance across product categories and subcategories."
@@ -36,38 +37,41 @@ def render() -> None:
 
     col1, col2 = st.columns(2)
     with col1:
-        st.plotly_chart(
-            px.pie(
-                by_category,
-                names="category",
-                values="revenue",
-                title="Revenue Share by Category",
-            ),
-            width="stretch",
-        )
+        with st.container(border=True):
+            st.plotly_chart(
+                px.pie(
+                    by_category,
+                    names="category",
+                    values="revenue",
+                    title="Revenue Share by Category",
+                ),
+                width="stretch",
+            )
     with col2:
+        with st.container(border=True):
+            st.plotly_chart(
+                px.bar(
+                    by_category,
+                    x="category",
+                    y="quantity",
+                    color="category",
+                    title="Quantity Sold by Category",
+                    labels={"category": "Category", "quantity": "Quantity"},
+                ),
+                width="stretch",
+            )
+
+    with st.container(border=True):
         st.plotly_chart(
             px.bar(
                 by_category,
                 x="category",
-                y="quantity",
-                color="category",
-                title="Quantity Sold by Category",
-                labels={"category": "Category", "quantity": "Quantity"},
+                y="revenue",
+                title="Revenue by Category",
+                labels={"category": "Category", "revenue": "Revenue (TRY)"},
             ),
             width="stretch",
         )
-
-    st.plotly_chart(
-        px.bar(
-            by_category,
-            x="category",
-            y="revenue",
-            title="Revenue by Category",
-            labels={"category": "Category", "revenue": "Revenue (TRY)"},
-        ),
-        width="stretch",
-    )
 
 
 if __name__ == "__main__":

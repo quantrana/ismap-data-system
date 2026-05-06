@@ -106,3 +106,35 @@ def get_sales_base() -> pd.DataFrame:
     return df
 
 
+def render_custom_sidebar(current_page: str) -> None:
+    """Render custom sidebar navigation and hide default page nav."""
+    st.markdown(
+        """
+        <style>
+        section[data-testid="stSidebarNav"] {display: none;}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    pages = [
+        ("home", "⌂", "app.py"),
+        ("overview", "Overview", "pages/01_overview.py"),
+        ("mall", "Sales by Mall", "pages/02_sales_by_mall.py"),
+        ("category", "Sales by Category", "pages/03_sales_by_category.py"),
+        ("trends", "Time Trends", "pages/04_time_trends.py"),
+        ("demographics", "Customer Demographics", "pages/05_customer_demographics.py"),
+        ("payment", "Payment Analysis", "pages/06_payment_analysis.py"),
+    ]
+    with st.sidebar:
+        st.subheader("Navigation")
+        for page_id, label, path in pages:
+            if page_id == current_page:
+                st.markdown(f"**{label}**")
+            else:
+                st.page_link(path, label=label)
+        st.divider()
+        st.caption("Data window: 2021-2023")
+        st.caption("Coverage: 10 Istanbul malls")
+
+
