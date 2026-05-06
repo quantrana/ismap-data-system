@@ -9,6 +9,7 @@ data/raw/
 dist/
 build/
 .streamlit/secrets.toml
+**/.streamlit/secrets.toml
 
 # Python tooling
 .pytest_cache/
@@ -32,3 +33,5 @@ data/rejected/
 # Kaggle credentials (never commit)
 kaggle.json
 **/kaggle.json
+
+.cursorignore
