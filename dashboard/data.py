@@ -118,7 +118,7 @@ def render_custom_sidebar(current_page: str) -> None:
     )
 
     pages = [
-        ("home", "⌂", "app.py"),
+        ("home", "Home", "app.py"),
         ("overview", "Overview", "pages/01_overview.py"),
         ("mall", "Sales by Mall", "pages/02_sales_by_mall.py"),
         ("category", "Sales by Category", "pages/03_sales_by_category.py"),
