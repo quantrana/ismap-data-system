@@ -68,7 +68,7 @@ This validates and transforms the 100-row sample without touching the database. 
 
 Each teammate owns one branch and one slice of the system. Work in your slice unless you've cleared a cross-cutting change with the rest of the team.
 
-### Teammate A — Lambda & Orchestration Engineer
+### Teammate A — Lambda & Orchestration Engineer - Michael
 
 **Your job:** automate the ETL pipeline so it runs without manual intervention.
 
