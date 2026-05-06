@@ -5,10 +5,23 @@ refresh the holiday dimension used for time-series enrichment.
 """
 
 from __future__ import annotations
-
+import logging
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict
 
-from scripts import extract_holidays
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.extract_holidays import (
+    fetch_all_holidays,
+    upload_to_s3,
+    _holiday_date_range,
+)
+
+LOGGER = logging.getLogger(__name__)
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -26,20 +39,23 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     dict
         Summary of the extraction run.
     """
-    start_year = int(event.get("start_year", 2021))
-    end_year = int(event.get("end_year", start_year))
-    country_code = event.get("country_code", "TR")
+    current_year = datetime.now(timezone.uts).year
+    start_year = int(event.get("start_year", current_year))
+    end_year = int(event.get("end_year", current_year))
+    
+    years = list(range(start_year, end_year + 1))
+    LOGGER.info("Fetching holidays for years: %s", years)
 
-    # Delegate to the script module's main function.
-    result = extract_holidays.main(
-        [
-            "--start-year",
-            str(start_year),
-            "--end-year",
-            str(end_year),
-            "--country-code",
-            country_code,
-        ]
-    )
-    return result
+    holidays = fetch_all_holidays(years)
+    upload_to_s3(holidays)
 
+    summary = {
+        "status": "success",
+        "years": years,
+        "total_holidays": len(holidays),
+        "date_range": _holiday_date_range(holidays),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    LOGGER.info("Holiday extraction complete: %s", summary)
+    return summary

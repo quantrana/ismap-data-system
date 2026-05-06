@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "ismap-data-lake"
+        },
+        "object": {
+          "key": "raw/kaggle/customer_shopping_data.csv"
+        }
+      }
+    }
+  ]
+}
