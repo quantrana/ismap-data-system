@@ -39,7 +39,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     dict
         Summary of the extraction run.
     """
-    current_year = datetime.now(timezone.uts).year
+    current_year = datetime.now(timezone.utc).year
     start_year = int(event.get("start_year", current_year))
     end_year = int(event.get("end_year", current_year))
     
